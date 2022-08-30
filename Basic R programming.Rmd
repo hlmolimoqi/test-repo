@@ -1,0 +1,1398 @@
+---
+title: "Basic R programming"
+author: "han"
+date: '2022-07-04'
+output: html_document
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# Basic R programming
+
+## Data Type
+
+the most basic object is a vector.
+
+vector(),c()
+
+1L - INTEGER
+
+complex复数
+
+x←c(1+0i,2+4i)
+
+```{r}
+0/0
+```
+
+?attributes
+
+```{r}
+x<-vector("numeric",length =10)
+x
+```
+
+```{r}
+as.numeric(c(TRUE,1,2))
+```
+
+### matrix
+
+must have every element be the same class 
+
+constructed column-wise
+
+```{r}
+m<-matrix(1:6,nrow=2,ncol=3)
+attributes(m)
+```
+
+```{r}
+m<-1:10
+dim(m)<-c(2,5)
+print(m)
+```
+
+### Factors
+
+represent categorical data 
+
+modelling functions
+
+```{r}
+x<-factor(c("yes","yes","no","yes","no"))
+print(x)
+table(x)
+```
+
+```{r}
+unclass(x)
+```
+
+the order of the levels can be set using the level argument to factor()
+
+In linear modelling, the first level is used as the baseline level.
+
+```{r}
+x<-factor(c("yes","yes","no","yes","no"),
+          levels=c("yes","no"))
+x
+```
+
+### Missing Values
+
+Na or NaN A NaN value is also NA but the converse is not true
+
+```{r}
+x<-c(1,2,NA,NaN,10,3)
+is.na(x)
+```
+
+```{r}
+x<-c(1,2,NA,NaN,10,3)
+is.nan(x)
+```
+
+### Data Frames
+
+row.names
+
+```{r}
+x<-data.frame(foo=1:4,bar=c(T,T,F,F))
+attributes(x)
+```
+
+### Name attributes
+
+```{r vector names}
+x<-1:3
+names(x)<-c("foo","bar","norf")
+x
+```
+
+```{r list names}
+x<-list(a=1,b=2,c=3)
+x
+```
+
+```{r matrice names}
+m<-matrix(1:4,nrow=2,ncol=2)
+dimnames(m)<-list(c("a","b"),c("c","d"))
+m
+```
+
+### Dates and times
+
+Dates are represented by the Date class Dates are stored internally as the number of days since 1970-01-01
+
+```{r}
+unclass(as.Date("1970-01-02"))
+```
+
+Times are represented by the POSIXct or the POSIXIt class 
+
+Times are stored internally as the number of seconds since 1970-01-01 
+
+POSIXct is just a very large integer under the hood; it use a useful class when you want to store times in something like a data frame 
+
+POSIXlt is a list underneath and it stores a bunch of other useful information like the day of the week, day of the year, month, day of the month
+
+There are a number of generic functions that work on dates and times
+weekdays: give the day of the week months: give the month name 
+quarters: give the quarter number ("Q1", "Q2", "Q3", or "Q4")
+
+```{r}
+x<-Sys.time()
+x
+p<-as.POSIXlt(x)
+names(unclass(p))
+p$yday
+q<-as.POSIXct(x)
+unclass(q)
+```
+
+```{r}
+format(Sys.time(),"%B %d,%Y %H:%M")
+format(Sys.time(),"%b %d,%Y %H:%M")
+datestring<-c("一月 10,2012 10:40","十二月 9,2011 9:10")
+x<-strptime(datestring,"%B %d,%Y %H:%M")
+x
+class(x)
+```
+
+```{r}
+x<-as.Date("2012-01-01")
+x<-as.POSIXlt(x)
+y<-strptime("9 1 2011 11:34:21","%d %m %Y %H:%M:%S")
+x-y
+```
+
+leap years,leap seconds,daylight savings and time zones
+
+```{r}
+x<-as.Date("2012-03-01");y<-as.Date("2012-02-28")
+x-y
+```
+
+
+## Control structures
+
+if,else;for;while;repeat;break;next;return 
+
+### if-else 
+if(condition){
+}else if(){ }else{ }
+
+```{r}
+x=1
+y<-if(x>3){
+  10
+}else{
+  0
+}
+```
+
+### for
+
+```{r}
+x<-c("a","b","c","d")
+for (i in seq_along(x)) print(x[i])
+```
+
+### while
+
+```{r}
+count<-0
+while(count<10){
+  print(count)
+  count<-count+1
+}
+```
+
+```{r}
+z<-5
+while (z>=3 && z<=10) {
+  print(z)
+  coin<-rbinom(1,1,0.5)
+  if(coin==1){
+    z<-z+1
+  }else{
+    z<-z-1
+  }
+}
+```
+
+### repeat
+
+the only way to exit a repeat loop is to call break
+
+x0\<-1 
+
+tol\<-1e-8 
+
+repeat{ 
+
+x1\<-computeEstimate() 
+
+if(abs(x1-x0)\<tol){
+
+break }else{ x0\<-x1 } }
+
+```{r}
+for (i in 1:100) {
+  if(i<=20){
+    next
+  }
+}
+```
+
+return signals that a function should exit and return a given value
+
+\*apply functions
+
+## Functions
+
+```{r}
+add2 <- function(x,y){
+  x+y
+}
+add2(3,5)
+```
+
+```{r}
+above10<-function(x){
+  use <- x>10
+  x[use]
+}
+above10(c(1,2,12,23))
+```
+
+default value
+
+```{r}
+above<-function(x,n=10){
+  use<-x>n
+  x[use]
+}
+x<-1:20
+above(x,12)
+above(x)
+```
+
+```{r}
+columnmean<-function(y,removeNA=TRUE){
+  nc<-ncol(y)
+  means<-numeric(nc)
+  for (i in 1:nc) {
+    means[i]<-mean(y[,i],na.rm=removeNA)
+  }
+  means
+}
+columnmean(airquality)
+```
+
+Functions in R are "first class objects"
+
+### Arguments 
+
+The formals function returns a list of all the formal arguments of a function
+
+You can mix positional matching with matching by name.
+
+When an argument is matched by name,it is "taken out" of the argument list and the remaining unnamed arguments are matched in the order that they are
+listed in the function definition.
+
+Function arguments can also be partially matched,which is useful for interactive work.The order of operations when given an argument is 
+
+1.Check for exact match for a named argument
+
+2.Check for a partial match
+
+3.Check for a positional match
+
+Lazy Evaluation
+
+The"..."Argument
+
+The... argument indicate a variable number of arguments that are usually passed on to other functions
+
+...is often used when extending another function and you don't want to copy the entire argument list of the
+original function
+
+```{r}
+myplot<-function(x,y,type="l",...){
+  plot(x,y,type=type,...)
+}
+```
+
+Generic functions use...so that extra arguments can be passed to methods.
+
+```{r}
+mean
+```
+
+The...argument is also necessary when the number of arguments passed to the function cannot be known in advance.
+
+```{r}
+args(paste)
+args(cat)
+```
+
+One catch with...is that any arguments that appear after...on the argument list must be named explicitly and cannot be partially matched.
+
+```{r}
+paste("a","b",sep=":",se=";")
+```
+### Subsetting
+
+[ returns the same class object 
+
+[[ extract elements of a list or a data frame 
+
+\$ extract elements of a list or a data frame by name
+
+```{r}
+x<-c("a","b","c","c","d","a")
+x[x>"a"]
+u<-x>"a"
+u
+x[u]
+```
+
+```{r}
+
+set.seed(123)
+X<-data.frame("var1"=sample(1:5),"var2"=sample(6:10),"var3"=sample(11:15))
+X<-X[sample(1:5),]
+X$var2[c(1,3)]=NA
+X
+X[1:2,"var2"]
+X[(X$var1<=3&X$var3>11),]
+X[(X$var1<=3|X$var3>11),]
+X[which(X$var2>8),]
+
+X$var5<-rnorm(5)
+Y<-cbind(X,rnorm(5))
+Y
+```
+
+#### list
+
+```{r}
+x<-list(foo=1:4,bar=0.6)
+x[1] #list
+x[[1]]
+x$bar
+x[["bar"]]
+x["bar"] #list
+```
+
+[[ can be used with computed indices
+
+```{r}
+x<-list(foo=1:4,bar=0.6)
+name<-"foo"
+x[[name]]
+x$name
+x$foo
+```
+
+```{r}
+x<-list(a=list(10,12,14),b=c(3.14,2.81))
+x
+x[[c(1,3)]]
+x[[1]][[3]]
+x[[c(2,1)]]
+```
+
+#### Matrix
+
+```{r}
+x<-matrix(1:6,2,3)
+x[,2]
+x[,2,drop=FALSE]
+
+```
+
+#### Partial Matching
+
+```{r}
+x<-list(aardavark=1:5)
+x$a
+x[["a",exact=F]]
+```
+
+#### Removing NA Values
+
+```{r}
+x<-c(1,2,NA,4,NA,5)
+bad<-is.na(x)
+x[!bad]
+```
+
+```{r}
+x<-c(1,2,NA,4,NA,5)
+y<-c("a","b",NA,"d",NA,"f")
+good<-complete.cases(x,y)
+good
+```
+
+```{r}
+airquality[1:6,]
+good<-complete.cases(airquality)
+airquality[good,][1:6,]
+```
+
+#### Vectorized Operations
+
+```{r}
+x<-1:4;y<-6:9
+x+y
+x>2
+y==8
+x*y
+x/y
+```
+
+```{r}
+x<-matrix(1:4,2,2);y<-matrix(rep(10,4),2,2)
+x*y
+x/y
+x %*% y
+```
+
+### Sorting
+```{r}
+sort(X$var1)
+sort(X$var2,decreasing =T,na.last =T)
+```
+
+```{r}
+X[order(X$var1),]
+X[order(X$var1,X$var3),]
+
+library(plyr)
+arrange(X,var1)
+arrange(X,desc(var1))
+```
+### Summarizing data
+```{r}
+head(mtcars,n=3)
+tail(mtcars,n=3)
+summary(mtcars)
+str(mtcars)
+quantile(mtcars$mpg,na.rm = T)
+quantile(mtcars$mpg,probs = c(0.5,0.75,0.9))
+
+table(mtcars$cyl,useNA = "ifany")
+
+table(mtcars$cyl,mtcars$gear)
+
+sum(is.na(mtcars$mpg))
+any(is.na(mtcars$mpg))
+all(mtcars$mpg>0)
+colSums(is.na(mtcars))
+all(colSums(is.na(mtcars))==0)
+
+table(mtcars$cyl %in% c(4,6))
+mtcars[mtcars$cyl %in% c(6), ]
+
+```
+cross tabs
+```{r}
+data(UCBAdmissions)
+DF=as.data.frame(UCBAdmissions)
+summary(DF)
+str(DF)
+xt<-xtabs(Freq ~ Gender +Admit, data=DF)
+xt
+```         
+Flat tables
+```{r}
+warpbreaks$replicate<-rep(1:9,len=54) 
+xt=xtabs(breaks~.,data=warpbreaks)
+xt
+ftable(xt)
+
+```
+Size of a data set
+```{r}
+fakeData=rnorm(1e5)
+object.size(fakeData) 
+print(object.size(fakeData),units = "Mb")
+```
+### Creating new variables
+creating sequences
+```{r}
+s1<-seq(1,10,by=2);s1
+s2<-seq(1,10,length=3);s2
+x<-c(1,3,8,25,100);seq(along=x)
+
+mtcars$cyl46=mtcars$cyl %in% c(4,6)
+table(mtcars$cyl46)
+```
+creating binary variables
+```{r}
+mtcars$cylWrong = ifelse(mtcars$cyl<0,TRUE,FALSE)
+table(mtcars$cylWrong,mtcars$cyl<0)
+```
+creating categorical variables
+```{r}
+mtcars$mpgGroups=cut(mtcars$mpg,breaks = quantile(mtcars$mpg))
+table(mtcars$mpgGroups)
+table(mtcars$mpgGroups,mtcars$mpg)
+
+library(Hmisc)
+mtcars$mpgGroups2 = cut2(mtcars$mpg,g=4)
+table(mtcars$mpgGroups,mtcars$mpgGroups2)
+
+```
+creating factor variables
+```{r}
+mtcars$cylf<-factor(mtcars$cyl)
+mtcars$cylf[1:10]
+
+yesno <- sample(c("yes","no") ,size=10, replace=TRUE)
+yesnofac=factor(yesno,levels=c("yes","no")) 
+relevel(yesnofac,ref="no") 
+as.numeric(yesnofac)
+```
+cutting produces factor variables
+```{r}
+library(Hmisc)
+mtcars$mpgGroups2 = cut2(mtcars$mpg,g=4)
+table(mtcars$mpgGroups,mtcars$mpgGroups2)
+```
+using the mutate function
+```{r}
+Library(Hmisc);library(plyr)
+
+mtcars2=mutate(mtcars,mpgGroups=cut2(mpg,g=4)) 
+table(mtcars2$mpgGroups)
+mtcars<-mtcars[,-(12:16)]
+```
+Common transforms
+
+abs(x) absolute value
+
+sqrt(x)square root
+
+ceiling(x)ceiling(3.475)is 4
+
+floor(x)floor(3.475) is 3
+
+round(x,digits=n)round(3.475,digits=2)is 3.48 
+
+signif(x,digits=n)signif(3.475,digits=2)is 3.5 
+
+cos(x), sin(x) etc.
+
+log(x) natural logarithm
+
+log2(x),log10(x)other common logs 
+
+exp(x) exponentiating x
+
+### Reshaping data
+```{r}
+library(reshape2)
+head(mtcars)
+mtcars$carname <- rownames (mtcars)
+
+carMelt <- melt(mtcars, id=c("carname", "gear", "cyl"), measure.vars=c("mpg", "hp"))
+
+head (carMelt,n=3)
+tail (carMelt,n=3)
+
+cylData<-dcast(carMelt, cyl ~ variable)#defaulting to length
+cylData
+
+cylData<-dcast(carMelt, cyl ~ variable,mean)
+cylData
+```
+Averaging values
+```{r}
+head(InsectSprays)
+tapply(InsectSprays$count, InsectSprays$spray, sum)
+
+spIns=split(InsectSprays$count, InsectSprays$spray);spIns
+sprCount=lapply(spIns, sum);sprCount
+unlist(sprCount)
+sapply(spIns, sum)
+
+ddply(InsectSprays,.(spray),summarise,sum=sum(count))
+```
+Creating a new variable
+```{r}
+spraySums<-ddply(InsectSprays,.(spray),summarise,sum=ave(count,FUN=sum));dim(spraySums)
+head(spraySums)
+```
+
+-acast-for casting as multi-dimensional arrays
+
+-arrange-for faster reordering without using order()commands 
+
+-mutate-adding new variables
+### Merging data
+
+```{r}
+names(AwardsManagers)
+names(Managers)
+mergedData=merge(AwardsManagers,Managers,by.x="playerID",by.y="playerID",all = TRUE)
+head(mergedData)
+
+intersect(names(AwardsManagers),names(Managers))
+mergedData2=merge(AwardsManagers,Managers,all = TRUE)
+head(mergedData2)
+
+View(join(AwardsManagers,Managers))#往左拼
+View(merge(AwardsManagers,Managers))#交集
+
+df1 = data.frame(id=sample(1:10),x=rnorm(10))
+df2=data.frame(id=sample(1:10),y=rnorm(10))
+df3=data.frame(id=sample(1:10),z=rnorm(10))
+dfList = list(df1,df2,df3) 
+join_all(dfList)
+```
+
+### Editing text variables
+```{r}
+names(Parks)
+tolower(names(Parks))
+splitNames = strsplit(names(Parks),"\\.")
+splitNames
+
+mylist <- list(letters = c("A", "b", "c"), numbers =1:3, matrix(1:25,ncol=5))
+head(mylist)
+mylist[1]
+mylist[[1]]
+
+splitNames[[3]][1]
+firstElement<-function(x){x[1]}
+sapply(splitNames, firstElement)
+
+sub("\\.","",names(Parks),)
+
+testName<-"this_is_a_test"
+sub("_","",testName)
+gsub("_","",testName)
+
+grep("TX",Parks$state)
+table(grepl("T",Parks$state))
+Parks2<-Parks[!grepl("T",Parks$state),]
+grep("T",Parks$state,value = TRUE)
+grep("TE",Parks$state)
+
+library(stringr)
+nchar("a b")
+substr("abcedfg",1,3)
+
+paste("a","b")
+paste0("a","b")
+
+str_trim("a    ")
+```
+#### Regular Expressions
+Literals
+
+We need a way to express
+
+whitespace word boundaries
+
+sets of literals
+
+the beginning and end of a line
+
+alternatives("war" or "peace") Metacharacters to the rescue!
+
+Metacharacters
+
+start of a line: ^i think
+
+end of a line: morning$
+
+character classes with []:[Bb][Uu][Ss][Hh];
+^[Ii] am
+
+a range of letters:[a-z]
+ or [a-zA-Z];^[0-9][a-zA-Z]
+
+ends without ? or . : [^?.]$
+
+any character: . ;
+9.11
+
+or:|;
+flood|fire;
+^[Gg]ood|[Bb]ad
+(means bad doesn't need to be at the start of a line);
+^([Gg]ood|[Bb]ad)
+
+optional:?;
+[Gg]eorge([Ww]\.)?[Bb]ush (([Ww]\.) is optional;\. means the literal dot, not the  metacharacter)
+
+repetition of any number, including none, of the item: *;
+(.*) will match ();(24,m,ge)
+
+repetition at least one the the item:+;
+[0-9]+(.*)[0-9]+ :at least one number followed by any number of characters, followed by at least one number again;
+
+will match 720;42;4ewerf234
+
+interval quantifiers:{};[Bb]ush( +[^ ]+ +){1,5} debate 
+
+( +[^ ]+ +){1,5} 
+at least one space,something that's not a space,followed by at least one space,between 1 and 5 times
+
+will match: Bush has historically won all major debates he's done; Bush doesn't need these debates..
+
+m,n:at least m but not more than n match
+
+m means exactly m matches
+
+m, means at least m matches
+
+(): limit the scope of alternatives divided by a |,but also can be used to remember thest matched by the subexpression enclosed. We refer to the matched text with \1,\2, etc.
+
+ +([a-zA-Z]+) +\1 +
+ will match the lines:time for bed, night night twitter; blah blah blah blah
+ 
+* always matches the longest possible string  that satifies the regular expression：
+^s(.*)s matches sitting at starbucks
+
+^s(.*?)s matches the smallest possible string
+
+### Working with dates
+```{r}
+date()
+class(date())
+class(Sys.Date())
+format(Sys.Date(),"%A %a %B %b %D %d")
+x=c("1八月1960","3八月1960");z=as.Date(x,"%d%B%Y");z
+z[1]-z[2]
+as.numeric(z[1]-z[2])
+weekdays(Sys.Date())
+months(Sys.Date())
+julian(Sys.Date())
+
+library(lubridate)
+ymd("20140108")
+dmy("03-04-2013")
+ymd_hms("2011-08-03 10:15:13",tz="Pacific/Auckland")
+x=dmy(c("1jan2013","2jan2013"))
+wday(x[1])
+wday(x[1],label=TRUE)
+```
+?Sys.timezone
+
+
+### Loop functions
+
+lapply:Loop over a list and evaluate a function on each element 
+
+sapply:Same as lapply but try to simplify the result
+
+apply:Apply a function over the margins of an array
+
+tapply:Apply a function over subsets of a vector 
+
+mapply:Multivariate version of lapply 
+
+#### lapply 
+
+always returns a list
+
+```{r}
+lapply
+x<-1:4
+lapply(x, runif)
+lapply(x, runif,min=0,max=10)
+
+x<-list(a=matrix(1:4,2,2),b=matrix(1:6,3,2))
+x
+lapply(x, function(elt) elt[,1])
+```
+
+#### sapply
+
+sapply will try to simplify the result of 1apply if possible.
+
+If the result is a list where every element is length 1,then a vector is returned 
+
+If the result is a list where every element is a vector of the same length (\>1),a matrix is returmed
+
+If it can't figure things out,a list is returned
+
+```{r}
+x<-list(a=1:4,b=rnorm(10),c=rnorm(20,1),d=rnorm(100.5))
+lapply(x, mean)
+sapply(x, mean)
+x<-list(a=matrix(1:4,2,2),b=matrix(1:6,3,2))
+sapply(x, function(elt) elt[,1])
+```
+
+#### apply
+
+```{r}
+str(apply)
+x<-matrix(rnorm(200),20,10)
+apply(x, 2, mean)
+apply(x, 1, quantile,probs=c(0.25,0.75))
+```
+
+rowSums=apply(x,1,sum) rowMean=apply(x,2,mean)
+
+```{r}
+a<-array(rnorm(2*2*10),c(2,2,10))
+apply(a, c(1,2), mean)
+rowMeans(a,dims=2)
+```
+
+#### mapply
+
+```{r}
+str(mapply)
+mapply(rep, 1:4,4:1)
+mapply(rnorm, 1:5,1:5,2)
+```
+
+#### tapply
+
+```{r}
+str(tapply)
+x<-c(rnorm(10),runif(10),rnorm(10,1))
+x
+f<-gl(3,10)
+f
+tapply(x, f, mean)
+tapply(x, f, mean,simplify=FALSE)
+tapply(x, f, range)
+```
+
+#### split
+
+```{r}
+str(split)
+x<-c(rnorm(10),runif(10),rnorm(10,1))
+f<-gl(3,10)
+split(x,f)
+lapply(split(x,f), mean)
+library(datasets)
+head(airquality)
+s<-split(airquality,airquality$Month)
+head(s,1)
+lapply(s, function(x) colMeans(x[,c("Ozone","Solar.R","Wind")],na.rm=TRUE))
+sapply(s, function(x) colMeans(x[,c("Ozone","Solar.R","Wind")],na.rm=TRUE))
+
+x<-rnorm(10)
+x
+f1<-gl(2,5)
+f2<-gl(5,2)
+f1
+f2
+interaction(f1,f2)
+str(split(x,list(f1,f2)))
+
+str(split(x,list(f1,f2),drop=TRUE))
+```
+
+### The str Function
+
+```{r}
+str(str)
+str(lm)
+str(ls)
+x<-rnorm(100,2,4)
+summary(x)
+str(x)
+f<-gl(40,10)
+str(f)
+summary(f)
+library(datasets)
+head(airquality)
+str(airquality)
+m<-matrix(rnorm(100),10,10)
+str(m)
+m[,1]
+s<-split(airquality,airquality$Month)
+str(s)
+```
+
+### Simulation
+
+gemerating random numbers 
+
+rnorm,dnorm,pnorm,rpois 
+
+·d for density 
+
+·r for random number generation 
+
+·p for cumulative distribution 
+
+·q for quantile
+
+function
+
+dnorm(x, mean = 0, sd = 1, log = FALSE) 
+
+pnorm(q, mean = 0, sd =1, lower.tail = TRUE, log.p = FALSE)
+
+qnorm(p, mean = 0, sd = 1, lower.tail = TRUE, log.p = FALSE) 
+
+rnorm(n, mean = 0, sd = 1) 
+
+lower.tail to the left, FALSE means upper tail 
+
+If Φ is the cumulative distribution function for a standard Normal distribution,then pnorm(q)=Φ(q) and
+qnorm(p) =Φ\^-1(p).
+
+Setting the random number seed with set.seed ensures reproducibility
+
+Always set the random number seed when conducting a simulation
+
+```{r}
+x<-rnorm(10)
+x
+x<-rnorm(10,20,2)
+summary(x)
+set.seed(1)
+rnorm(5)
+rnorm(5)
+set.seed(1)
+rnorm(5)
+rnorm(5)
+
+rpois(10,1)
+rpois(10,2)
+rpois(10,20)
+ppois(2,2)
+ppois(4,2)
+ppois(10,2)
+```
+
+#### Linear Model
+
+```{r}
+set.seed(20)
+x<-rnorm(100)
+e<-rnorm(100,0,2)
+y<- 0.5+2*x+e
+summary(y)
+plot(x,y)
+```
+
+x is binary
+
+```{r}
+set.seed(20)
+x<-rbinom(100,1,0.5)
+e<-rnorm(100,0,2)
+y<- 0.5+2*x+e
+summary(y)
+plot(x,y)
+```
+
+Poisson
+
+```{r}
+set.seed(1)
+x<-rnorm(100)
+log.mu<-0.5+0.3*x
+y<-rpois(100,exp(log.mu))
+summary(y)
+plot(x,y)
+```
+
+### Random sampling
+
+The sample function draws randomly from a specified set of (scalar)
+objects allowing you to sample from arbitrary distributions.
+
+```{r}
+set.seed(1)
+sample(1:10,4)
+sample(letters,5)
+sample(1:10)
+sample(1:10,replace = TRUE)
+```
+
+
+## Packages
+
+### data.table
+much faster than data.frame at subsetting,group and updating
+```{r}
+library(data.table)
+DT=data.table(x=rnorm(9),y=rep(c("a","b","c"),each=3),z=rnorm(9))
+head(DT,3)
+
+tables()
+
+DT[2,]
+DT[DT$y=="a",]
+DT[c(2,3)]
+DT[,c(2,3)]
+
+```
+
+The argument you pass after the comma is called an "expression"
+
+In R an expression is a collection of statements enclosed in curley brackets
+```{r}
+{
+  x=1
+  y=2
+}
+k={print(10);5}
+print(k)
+
+DT[,list(mean(x),sum(z))]
+DT[,table(y)]
+DT[,w:=z^2]
+DT[,y:=2]
+DT
+DT[,m:={tmp<- (x+z);log2(tmp+5)}]
+DT
+
+DT[,a:=x>0]
+
+DT[,b:=mean(x+w),by=a] #group by a
+DT
+```
+Special variables
+
+.N: An integer,length 1,containing the numbe r 
+```{r}
+set.seed(123)
+DT<-data.table(x=sample(letters[1:3],1E5,TRUE))
+DT
+DT[,.N,by=x]
+```
+Keys
+```{r}
+DT<-data.table(x=rep(c("a","b","c"),each=100),y=rnorm(300))
+setkey(DT,x)
+DT['a']
+```
+Joins
+```{r}
+DT1<-data.table(x=c('a','a','b','dt1'),y=1:4)
+DT2<-data.table(x=c('a','b','dt2'),z=5:7)
+setkey(DT1,x);setkey(DT2,x)
+merge(DT1,DT2)
+```
+
+### dplyr
+arrange,filter,select,mutate,rename,summarise
+
+working with dataframe
+
+Properties
+
+The first argument is a data frame.
+
+
+The subsequent arguments describe what to do with it,and you can refer to columns inthe data frame directly without using the $ operator (just use the names).
+
+The result is a new data frame
+
+Data frames must be properly formatted and annotated for this to all be useful
+
+```{r}
+
+# chicago<-readRDS("chicago.rds")
+library(plyr)
+library(dplyr)
+str(baseball)
+names(baseball)
+head(select(baseball,id:team))
+head(select(baseball,-(id:team)))
+i<-match("id",names(baseball))
+j<-match("team",names(baseball))
+head(baseball[,-(i:j)])
+base.f<-filter(baseball,r>90&gidp>8)
+head(base.f)
+
+baseball<-arrange(baseball,year)
+head(baseball)
+tail(baseball)
+baseball<-arrange(baseball,desc(year))
+head(baseball)
+
+base.f<-dplyr::rename(base.f,y=year);head(base.f)
+
+base.f<-mutate(base.f,yeargaps=y-mean(y,na.rm=T))
+head(base.f)
+
+base.f<-mutate(base.f,age = factor(1* (y <1950),labels=c("young","old")))
+youngold<-group_by(base.f,age);youngold
+dplyr::summarise(youngold,r=mean(r,na.rm=T),h=max(h),hr=median(hr))
+years<-group_by(base.f,y)
+dplyr::summarize(years,r=mean(r,na.rm=T),h=max(h),hr=median(hr))
+
+baseball %>% filter(r>90&gidp>8) %>% dplyr::rename(y=year)%>% group_by(y) %>% dplyr::summarize(r=mean(r,na.rm=T),h=max(h),hr=median(hr))
+
+```
+base.f<-mutate(base.f,year=as.POSIXlt(date)$year+1900)
+
+
+## Scoping Rules
+
+When R tries to bind a value to a symbol,it searches through a series of environments to find the appropriate value.When you are working on the
+command line and need to retrieve the value of an R object,the order is roughly
+
+1.Search the global environment for a symbol name matching the one requested. 
+
+2.Search the namespaces of each of the packages on the search list
+
+The search list can be found by using the search function.
+
+```{r}
+search()
+```
+
+The scoping rules determine how a value is associated with a free variable in a function
+
+R uses lexical scoping or static scoping.
+
+A common alternative is dynamic scoping. 
+
+Related to the scoping rules is how R uses the search list to bind a value to a symbol 
+
+Lexical scoping turns out to be particularly useful for simplifying statistical computations
+
+### Lexical Scoping
+
+```{r}
+f<-function(x,y){
+  x^2+y/z
+}
+z=2
+f(1,2)
+```
+
+free variable z Lexical scoping in R means that the values of free variables are searched for in the environment in which the function was defined. 
+
+What is an environment? An environment is a collection of (symbol, value) pairs, i.e. x is a symbol and 3.14 might be its value.
+Every environment has a parent environment; it is possible for an environment to have multiple "children" 
+the only environment without a parent is the empty environment
+
+A function+an environment=a closure or function closure.
+
+Searching for the value for a free variable: If the value of a symbol is not found in the environment in which a function was defined,then the search is continued in the parent environment. The search continues down the sequence of parent environments until we hit the top-level environment,this usually the global environment(workspace) or the namespace of a package. After the top-level environment,the search
+continues down the search list until we hit the empty environment.
+If a value for a given symbol cannot be found once the empty environment is arrived at,then an error is thrown.
+
+However,in R you can have functions defined inside other functions 
+In this case the environment in which a function is defined is the body of another function
+
+```{r}
+make.power<-function(n){
+  pow<-function(x){
+    x^n
+  }
+  pow
+}
+cube<-make.power(3)
+square<-make.power(2)
+cube(3)
+square(3)
+ls(environment(cube))
+get("n",environment(cube))
+ls(environment(square))
+get("n",environment(square))
+```
+
+```{r}
+y<-10
+f<-function(x){
+  y<-2
+  y^2+g(x)
+}
+g<-function(x){
+  x*y
+}
+f(3)
+```
+
+lexical vs.dynamic scoping With lexical scoping the value of y in the function g is looked up in the environment in which the function was defined,in this case the global environment,so the value of y is 10.
+
+With dynamic scoping,the value of y is looked up in the environment from which the function was called(sometimes referred to as the calling environment).In R the calling environment is known as the parent frame So the value of y would be 2.
+
+When a functionis defined in the global environment and is subsequently called from the global environment,then the defining environment and the calling environment are the same.This can sometimes give the appearance
+of dynamic scoping. 
+
+### Application:Optimization 
+
+optim,nlm,optimize
+
+```{r}
+make.NegLogLik<-function(data,fixed=c(FALSE,FALSE)){
+  params<-fixed
+  function(p){
+    params[!fixed]<-p
+    mu<-params[1]
+    sigma<-params[2]
+    a<- -0.5*length(data)*log(2*pi*sigma^2)
+    b<- -0.5*sum((data-mu)^2)/(sigma^2)
+    -(a+b)
+  }
+}
+set.seed(1);normals<-rnorm(100,1,2)
+nLL<-make.NegLogLik(normals)
+nLL
+ls(environment(nLL))
+
+optim(c(mu=0,sigma=1),nLL)$par
+
+#fixing sigma=2
+nLL<-make.NegLogLik(normals,c(FALSE,2))
+optimize(nLL,c(-1,3))$minimum
+#fixing mu=1
+nLL<-make.NegLogLik(normals,c(1,FALSE))
+optimize(nLL,c(1e-6,10))$minimum
+```
+
+```{r}
+nLL<-make.NegLogLik(normals,c(1,FALSE))
+x<-seq(1.7,1.9,len=100)
+y<-sapply(x,nLL)
+plot(x,exp(-(y-min(y))),type="l")
+```
+
+```{r}
+nLL<-make.NegLogLik(normals,c(FALSE,2))
+x<-seq(0.5,1.5,len=100)
+y<-sapply(x,nLL)
+plot(x,exp(-(y-min(y))),type="l")
+```
+
+## Coding standard
+
+1.Always use text files/text editor
+
+2.Indent your code
+
+3.Limit the width of your code (80 columns?)
+
+4.Limit the length of individual functions
+
+
+
+## Debugging Tools
+
+message,warning,error,condition
+
+```{r}
+printmessage<-function(x){
+      if(is.na(x))
+            print("x is a missing value!")
+      else if(x>0)
+            print("x is greater than zero")
+      else
+            print("x is less than or equal to zero")
+      invisible(x)
+}
+printmessage(1)
+y<-printmessage(1)
+y
+x<-log(-1)
+printmessage(x)
+```
+
+traceback,debug,browser,trace,recover
+
+
+mean(xy)
+traceback()
+
+lm(xy~x)
+traceback()
+
+debug(lm)
+lm(xy~x)
+type 'n' for the next line until error occurs
+options(error=recover)
+read.csv("nosuchfile")
+traceback()
+
+## R Profiler
+
+Profiling is a systematic way to examine how much time is spend in different parts of a program system.time() 
+
+Usually, the user time and elapsed time are relatively close, for straight computing tasks 
+
+Elapsed time may be greater than user time if the CPU spends a lot of time waiting around
+
+Elapsted time may be smaller than the user time if your
+machine has multiple cores/processors (and is capable of using them)
+
+Multi-threaded BLAS libraries (vecLib/Accelerate, ATLAS, ACML, MKL)
+
+Parallel processing via the parallel package
+
+```{r}
+#Elapsed time > user time
+system.time(readLines("https://www.pku.edu.cn/"))
+#Elapsed time < user time
+hilbert<-function(n){
+  i<-1:n
+  1/outer(i-1,i,"+")
+}
+x<-hilbert(1000)
+system.time(svd(x))
+
+system.time({
+  n<-1000
+  r<-numeric(n)
+  for (i in 1:n) {
+    x<-rnorm(n)
+    r[i]<-mean(x)
+  }
+})
+```
+
+The Rprof() function starts the profiler in R 
+
+The summaryRprof() function summarizes the output from Rprof() (otherwise it's not readable)
+
+DO NOT use system.time() and Rprof() together
+
+summaryRprof() :There are two methods for normalizing the data
+
+"by.total" divides the time spend in each function by the total run time
+
+"by.self" does the same but first subtracts out time spent in functions above in the call stack
+
+## Data resources
+·United Nations http://data.un.org/
+
+·U.S.http://www.data.gov/
+
+·United Kingdom http://data.gov.uk/
+
+·France http://www.data.gouv.fr/
+
+·Ghana http://data.gov.gh/
+
+·Australia http://data.gov.au/
+
+·Germany https://www.govdata.de/
+
+·Hong Kong http://www.gov.hk/en/theme/psi/datasets/
+
+·Japan http://www.data.go.jp/
+
+·Many more http://www.data.gov/opendatasites
+
+Gapminder http://www.gapminder.com
+
+kaggle
+

@@ -1,0 +1,410 @@
+---
+title: "Obtaining data"
+author: "han"
+date: "2022-08-26"
+---
+
+# Obtaining data 
+
+Raw data -\> Processing script -\> tidy data (-\> data analysis -\> data communication) 
+
+raw and processed data
+
+## Components of tidy data 
+
+The code book 
+
+1.Information about the variables (including units!) in the data set not contained in the tidy data 
+
+2. Information about the summary choices you made 
+
+3. Information about the experimental study design you used Some other important tips 
+
+·A common format for this document is a Word/text file. 
+·There should be a section called "Study design" that has a thorough description of how you collected the data.
+
+There must be a section called "Code book" that describes each variable and its units.
+
+Ideally a computer script (in R :-), but I suppose Python is ok too...)
+
+The input for the script is the raw data The output is the processed,tidy data There are no parameters to the script.
+
+## Downloading files
+
+getwd() and setwd()
+
+relative - setwd("./data"),set("../")
+
+absolute - setwd("/Users/data")
+
+file.exists("directoryName") will check to see if the directory exists
+
+dir.create("directoryName")will create a directory if it doesn't exist
+
+```{r}
+if(!file.exists("./data")){
+  dir.create("./data")
+}
+```
+
+download.file()
+
+
+fileUrl<-"https://opendata.arcgis.com/api/v3/datasets/d2e0246990ab42c2944cfd2a5ec00ceb_0/downloads/data?format=csv&spatialRefId=4326&where=1%3D1"
+download.file(fileUrl,destfile = "./data/liquidcali.csv",method="curl")
+list.files("./data/")
+dateDownloaded<-date()
+dateDownloaded
+
+
+## Reading files
+### Reading data
+
+read.table,read.csv, for reading tabular data
+
+readLines, for reading lines of a text file 
+
+source, for reading in R code files 
+
+dget, forvreading in R code files 
+
+load, for reading in saved workspaces 
+
+unserialize, for reading single R objects in binary form
+
+writing data to files:
+
+write.table,writeLines,dump,dput,save,serialize
+
+read.table(file,header,sep(default to space),colClasses,nrows,comment.char, skip,stringAsFactor(default to TRUE))
+
+read.csv, sep default to comma
+
+#### Larger Datasets
+
+set comment.char="" if there are no commented lines in your file 
+
+Using the colClasses argument can make 'read.table' run much faster
+
+colClasses="numeric" 
+
+colClasses = classes 
+
+Setting nrows helps with memory usage. overestimate is okay
+
+initial\<-read.table("datatable.txt",nrow=100)
+
+classes\<-sapply(initial,class)
+
+tabAll\<-read.table("datatable.txt",colClasses = classes)
+
+calculating memory requirements 1,500,000 rows and 120 columns
+
+1,500,000*120*8 bytes/numeric=1440000000/2\^20 bytes/MB=1.34 GB
+
+#### textual data formats
+
+writing dput and dump 
+
+dump and dput preserve the metadata not very space-efficient 
+
+dput-one R object
+
+```{r}
+y<-data.frame(a=1,b="a")
+dput(y)
+```
+
+```{r}
+dput(y,file="y.R")
+new.y<-dget("y.R")
+new.y
+```
+
+dump-multiple r object
+
+```{r}
+x<-"foo"
+y<-data.frame(a=1,b="a")
+dump(c("x","y"),file="data.R")
+rm(x,y)
+source("data.R")
+y
+x
+```
+
+#### Connections:Interfaces to the Outside World
+
+file 
+
+gzfile-opens a connection to a file compressed with gzip
+
+bzfile-opens a connection to a file compressed with bzip2 
+
+url-opens a connection to a webpage
+
+```{r}
+str(file)
+```
+
+Possible values for the argument open are
+
+"r" or "rt" Open for reading in text mode.
+
+"w" or "wt" Open for writing in text mode.
+
+"a" or "at" Open for appending in text mode.
+
+"rb" Open for reading in binary mode.
+
+"wb" Open for writing in binary mode.
+
+"ab" Open for appending in binary mode.
+
+"r+", "r+b" Open for reading and writing.
+
+"w+", "w+b" Open for reading and writing, truncating file initially.
+
+"a+", "a+b" Open for reading and appending.
+
+con\<-file("foo.txt","r") data\<-read.csv(con) close(con)
+
+is the same as
+
+data\<-read.csv("foo.txt")
+
+con\<-gzfile("words.gz") x\<-readLines(con,10)
+
+writeLines
+
+```{r}
+con<-url("http://www.jhsph.edu","r")
+x<-readLines(con)
+# head(x)
+```
+
+### Reading local flat files
+
+read.table()
+
+```{r}
+# calidata<-read.table("./data/liquidcali.csv")
+calidata<-read.table("./data/liquidcali.csv",sep=",",header = TRUE,nrows = 100)
+head(calidata)
+```
+
+In my experience, the biggest trouble with reading flat files are quotation marks'or" placed in data values, setting quote="" often resolves these.
+
+### Reading excel files
+
+if(!file.exists("./data")){ dir.create("./data")}
+
+download.file(fileUrl,destfile = "./data/street.xlsx",method="curl")
+dateDownloaded\<-date()
+
+library(readxl,readr)
+
+streetData\<-read_xlsx("./data/street.xlsx",sheet=1,skip=2)
+
+head(streetData)
+
+write.xlsx
+
+### Reading xml
+
+Tags, elements and attributes
+
+·Tags correspond to general labels -Start tags
+
+<section>
+
+-End tags
+
+</section>
+
+-Empty tags <line-break/>
+
+·Elements are specific examples of tags
+
+\- <Greeting> Hello, world </Greeting>
+
+Attributes are components of the label
+```
+<img src="jeff.jpg" alt="instructor"/> 
+<step number="3"> Connect A to B.</step>
+```
+
+```{r}
+# install.packages("XML")
+library(XML)
+library(httr)
+url <- "http://www.england.nhs.uk/statistics/statistical-work-areas/bed-availability-and-occupancy/"
+doc <- htmlParse(rawToChar(GET(url)$content))
+
+fileUrl<-"http://www.w3schools.com/xml/simple.xml"
+doc<-xmlTreeParse (rawToChar(GET(fileUrl)$content),useInternalNodes = TRUE)
+rootNode<-xmlRoot(doc)
+xmlName(rootNode)
+names(rootNode)
+rootNode[1]
+rootNode[[1]]
+rootNode[[1]][[1]]
+rootNode[[1]][1]
+#Programatically extract parts of the file
+xmlSApply(rootNode,xmlValue)
+```
+
+XPath
+
+```{r}
+xpathSApply(rootNode,"//name",xmlValue)
+xpathSApply(rootNode,"//price",xmlValue)
+```
+
+```{r}
+fileUrl<-"http://espn.go.com/nfl/team/_/name/bal/baltimore-ravens"
+doc<-htmlTreeParse(rawToChar(GET(fileUrl)$content),useInternalNodes = TRUE)
+title<-xpathSApply(doc,"//title",xmlValue)
+title
+```
+
+scores \<- xpathSApply(doc,"//li[@class='score']",xmlValue)
+
+teams \<- xpathSApply(doc,"//Li[@class='team-name']",xmlValue)
+
+### Reading JSON
+
+```{r}
+# install.packages("jsonlite")
+library(jsonlite)
+jsonData<-fromJSON("http://api.github.com/users/jtleek/repos")
+names(jsonData)[1:5]
+names(jsonData$owner)
+jsonData$owner$login
+myjson<-toJSON(head(iris,3),pretty = TRUE)
+cat(head(myjson))
+iris2<-fromJSON(myjson)
+head(iris2)
+```
+### Reading from mySQL
+```{r}
+# install.packages("RMySQL")
+library(RMySQL)
+ucscDb<-dbConnect(MySQL(),user="genome",            host="genome-mysql.soe.ucsc.edu")
+result<-dbGetQuery(ucscDb,"show databases;");dbDisconnect(ucscDb);
+head(result)
+
+hg19<-dbConnect(MySQL(),user="genome", db="hg19",           host="genome-mysql.soe.ucsc.edu")
+allTables<-dbListTables(hg19)
+length(allTables)
+allTables[1:5]
+dbListFields(hg19,"affyU133Plus2") #column names
+dbGetQuery(hg19,"select count(*) from affyU133Plus2") #row numbers
+
+# affyData<-dbReadTable(hg19,"affyU133Plus2")
+# head(affyData)
+
+query<-dbSendQuery(hg19,"select * from affyU133Plus2 where misMatches between 1 and 3") 
+
+affyMis<-fetch(query)
+quantile(affyMis$misMatches)
+affyMisSmall<-fetch(query,n=10);
+dbClearResult(query);
+dim(affyMisSmall)
+dbDisconnect(hg19)
+```
+### Reading from HDF5
+http://bioconductor.org/
+
+if (!require("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+BiocManager::install(version = "3.15")
+
+### Reading data from the web 
+```{r}
+con=url("https://xueshu.baidu.com/s?wd=water&rsv_bp=0&tn=SE_baiduxueshu_c1gjeupa&rsv_spt=3&ie=utf-8&f=8&rsv_sug2=0&sc_f_para=sc_tasktype%3D%7BfirstSimpleSearch%7D")
+
+htmlCode=readLines(con)
+
+close(con)
+htmlCode[1]
+
+library(XML)
+library(httr)
+url<-"https://flomoapp.com/mine"
+html<-htmlTreeParse(rawToChar(GET(url)$content),useInternalNodes = T)
+xpathSApply(html,"//title",xmlValue)
+# xpathSApply(html,"//td[@id='col-citedby']",xmlValue)
+
+html2=GET(url)
+content2=content(html2,as="text")
+parsedHtml=htmlParse(content2,asText=TRUE)
+xpathSApply(parsedHtml,"//title",xmlValue)
+
+pg1=GET("http://httpbin.org/basic-auth/user/passwd")
+pg1
+
+pg2=GET("http://httpbin.org/basic-auth/user/passwd",authenticate("user","passwd"))
+pg2
+names(pg2)
+
+google=handle("http://baidu.com")
+pg1=GET(handle = google,path="/")
+pg2=GET(handle=google,path="search")
+```
+### Reading form APIs
+Application programming interfaces
+```
+myapp = oauth_app("twitter",key="ourConsumerKeyHere",secret="yourConsumerSecretHere")
+sig = sign_oauth1.0(myapp,            token="yourTokenHere",token_secret="yourTokenSecretHere") 
+homeTL=GET("https://api.twitter.com/1.1/statuses/home_timeline.json",sig) 
+json1=content(homeTL)
+json2 =jsonlite::fromJSON(toJSON(json1)) 
+json2[1,1:4]
+```
+httr allows GET,POST,PUT, DELETE requests if you are authorized 
+
+You can authenticate with a user name or a password
+
+Most modern APls use something like oauth
+
+httr works well with Facebook,Google,Twitter,Github,etc. 
+
+### Reading from other sources
+
+Loads data from Minitab,S,SAS,SPSS,Stata,Systat 
+
+Basic functions read.foo
+
+-read.arff(Weka)
+
+-read.dta(Stata)
+
+-read.mtp(Minitab)
+
+-read.octave(Octave)
+
+-read.spss(SPSS)
+
+-read.xport(SAS) 
+
+RPostresSQL;
+RODBC;
+RMongo
+
+Reading images:
+
+jpeg;
+readbitmap;
+png;
+EBlmage(Bioconductor)
+
+Reading GIS data:
+
+rdgal
+rgeos
+raster
+
+Reading music data:
+
+tuneR;seewave;
