@@ -1,0 +1,969 @@
+---
+title: "Analytic Graphics"
+author: "han"
+date: "2022-08-26"
+output: html_document
+---
+
+# Analytic Graphics
+Principles of analytic graphics
+
+1. show comparisons
+
+2. show causality, mechanism, explanation, systematic structure
+
+3. show multivariate data
+
+4. integration of evidence
+
+5. describe and document the evidence with appropriate labels,scales, sources, etc
+
+6. content is king
+
+## Exploratory graphs
+```{r}
+with(airquality[!is.na(airquality$Ozone),], {
+hist(airquality$Ozone,col="green",breaks = 20)
+rug(Ozone)
+    })
+
+with(airquality,{
+hist(Wind,col="green",breaks = 20)
+abline(v=12,lwd=2)
+abline(v=median(Wind),col="magenta",lwd=4)
+})
+
+with(airquality,{
+  boxplot(airquality$Wind,color="blue")
+  abline(h=10)
+  
+})
+
+
+```
+multiple variables
+```{r}
+boxplot(uptake ~ Treatment,data=CO2,col="red")
+
+par(mfrow=c(2,1),mar=c(4,4,2,1))
+hist(subset(CO2,Treatment=="nonchilled")$uptake,col="green")
+hist(subset(CO2,Treatment=="chilled")$uptake,col="green")
+
+par(mfrow=c(1,1))
+plot(CO2$conc,CO2$uptake,col=CO2$Treatment)
+abline(h=30,lwd=2,lty=2)
+
+par(mfrow=c(1,2),mar=c(5,4,2,1))
+with(subset(CO2,Treatment=="nonchilled"),{plot(conc,uptake,main="nonchilled")})
+with(subset(CO2,Treatment=="chilled"),{plot(conc,uptake,main="chilled")})
+```
+## Graphics Devices
+?Devices
+windows()
+
+1.Explicitly launch a graphics device
+
+2. Call a plotting function to make a plot (Note: if you are using a file device, no plot will appear on the screen)
+
+3.Annotate plot if necessary
+
+4. Explicitly close graphics device with dev.off() (this is very important!)
+
+```{r}
+pdf(file = "myplot.pdf")
+with(faithful,plot(eruptions,waiting))
+title(main="old Faithful Geyser data")
+dev.off()
+```
+### Graphics File Devices
+
+There are two basic types of file devices:vector and bitmap devices 
+
+Vector formats:
+
+pdf:useful for line-type graphics, resizes well,usually portable, not efficient if a plot has many objects/points
+
+svg:XML-based scalable vector graphics; supports animation and interactivity,potentially useful for web-based plots
+
+win.metafile:Windows metafile format (only on Windows)
+
+postscript:older format,also resizes well,usually portable,can be used to create encapsulated postscript files; Windows systems often don't have a postscript viewer
+
+Bitmap formats
+png: bitmapped format,good for line drawings or images with solid colors, uses lossless compression (like the old GIF format), most web browsers can read this format natively,good for plotting many many many points, does not resize well
+
+jpeg:good for photographs or natural scenes,uses lossy compression,good for plotting many many many points, does not resize well, can be read byalmost any computer and any web browser,not great for line drawings
+
+tiff:Creates bitmap files in the TIFF format; supports lossless compression
+
+bmp:a native Windows bitmapped format
+
+### Multiple Open Graphics Devices
+
+It is possible to open multiple graphics devices(screen,file, or both), for example when viewing multiple plots at once
+
+Plotting can only occur on one graphics device at a time
+
+The currently active graphics device can be found by calling dev.cur()
+
+Every open graphics device is assigned an integer ≥ 2.
+
+You can change the active graphics device with dev.set(<integer>)where <integer> is the number associated with the graphics device you want to switch to
+
+
+```{r}
+dev.cur()
+dev.set(1)
+plot(x,y)
+dev.set(3)
+plot(y,z)
+```
+
+### Copying Plots
+
+Copying a plot to another device can be useful because some plots require a lot of code and it can be a pain to type all that in again for a different device.
+
+dev.copy:copy a plot from one device to another 
+
+dev.copy2pdf:specifically copy a plot to a PDF file
+
+NOTE: Copying a plot is not an exact operation, so the result may not be identical to the original. 
+```{r}
+library(datasets)
+
+with(faithful, plot(eruptions, waiting)) ## Create plot on screen device
+title(main ="0ld Faithful Geyser data") ## Add a main title
+
+dev.copy(png, file = "geyserplot.png") ## Copy my plot to a PNG file 
+dev.off() ## Don't forget to close the PNG device!
+
+```
+
+## Base Ploting System
+?par
+```{r}
+library(datasets)
+par(mfrow=c(1,1))
+data(cars)
+with(cars,plot(speed,dist))
+
+hist(airquality$Ozone)
+with(airquality,plot(Wind,Ozone))
+boxplot(Ozone~Month,airquality)
+airquality<-transform(airquality,Month=factor(Month))
+boxplot(Ozone~Month,airquality)
+
+```
+pch:the plotting symbol (default is open circle)
+
+lty:the line type (default is solid line),can be dashed, dotted,etc. 
+
+lwd:the line width,specified as an integer multiple
+
+col:the plotting color, specified as a number, string,or hex code;the colors() function gives you a vector of colors by name
+
+xlab:character string for the x-axis label
+
+ylab:character string for the y-axis label
+
+The par() function is used to specify global graphics parameters that affect all plots in an R session. 
+These parameters can be overridden when specified as arguments to specific plotting functions.
+
+las:the orientation of the axis labels on the plot 
+
+bg:the background color
+
+mar:the margin size
+
+oma:the outer margin size (default is 0 for all sides)
+
+mfrow:number of plots per row, column (plots are filled row-wise)
+
+mfcol: number of plots per row, column (plots are filled column-wise) 
+
+Default values for global graphics parameters
+```{r}
+par("lty")
+par("col")
+par("pch")
+par("bg")
+par("mar") #bottom,left,top,right
+par("mfrow")
+```
+
+plot:make a scatterplot, or other type of plot depending on the class of the object being plotted 
+
+lines:add lines to a plot,given a vector x values and a corresponding vector of y values (or a 2- column matrix);this function just connects the dots
+
+points:add points to a plot
+
+text: add text labels to a plot using specified x,y coordinates
+
+title:add annotations to x,y axis labels,title, subtitle,outer margin 
+
+mtext:add arbitrary text to the margins (inner or outer) of the plot 
+
+axis:adding axis ticks/labels
+
+```{r}
+with(airquality,plot(Wind,Ozone,main="Ozone and Wind in New York City"))
+with(subset(airquality,Month == 5),points(Wind,Ozone,col="blue"))
+
+with(airquality,plot(Wind,Ozone,main="Ozone and Wind in New York City",type="n"))
+with(subset(airquality,Month == 5),points(Wind,Ozone,col="blue"))
+with(subset(airquality,Month != 5),points(Wind,Ozone,col="red"))
+legend("topright",pch=1,col=c("blue","red"),legend = c("May","Other Months"))
+
+with(airquality,plot(Wind,Ozone,main="Ozone and Wind in New York City",pch=20))
+model<-lm(Ozone~Wind,airquality)
+abline(model,lwd=2)
+
+par(mfrow=c(1,2))
+with(airquality,{
+  plot(Wind,Ozone,main="Ozone and Wind")
+  plot(Solar.R,Ozone,main="Ozone and Solar Radiation")
+  })
+
+par(mfrow=c(1,3),mar=c(4,4,2,1),oma=c(0,0,2,0))
+with(airquality,{
+  plot(Wind,Ozone,main="Ozone and Wind")
+  plot(Solar.R,Ozone,main="Ozone and Solar Radiation")
+  plot(Temp,Ozone,main="Ozone and Temperature")
+  mtext("Ozone and Weather in New York City", outer=T)
+  })
+
+par(mfrow=c(1,1),mar=c(4,4,2,2),oma=c(0,0,0,0))
+x<-rnorm(100)
+hist(x,n=15)
+y<-rnorm(100)
+plot(x,y)
+z<-rnorm(100)
+plot(x,z)
+
+plot(x,y,pch=24,col="blue",bg="red")
+example(points)
+
+plot(x,y,pch=20)
+title("Scatterplot")
+text(-2,-2,"Label")
+legend("topleft",legend="Data",pch=20)
+fit<-lm(y~x)
+abline(fit)
+abline(fit,lwd=3,col="blue")
+plot(x,y,xlab="Weight",ylab="Height",main="Scatterplot",pch=20)
+legend("topright",legend="Data",pch=20)
+fit<-lm(y~x)
+abline(fit,lwd=3,col="red")
+z<-rpois(100,2)
+par("mar")
+par(mar=c(2,2,1,1))
+par(mfrow=c(2,1))
+plot(x,y,pch=20)
+plot(x,z,pch=19)
+
+par(mfrow=c(1,2))
+par(mar=c(4,4,2,2))
+plot(x,y,pch=20)
+plot(x,z,pch=19)
+
+par(mfrow=c(2,2))
+plot(x,y)
+plot(x,z)
+plot(y,z)
+plot(y,x)
+
+par(mfcol=c(2,2)) #different order
+plot(x,y)
+plot(x,z)
+plot(y,z)
+plot(y,x)
+
+par(mfrow=c(1,1))
+x<-rnorm(100)
+y<-x+rnorm(100)
+g<-gl(2,50,labels=c("Male","Female"))
+str(g)
+plot(x,y)
+
+plot(x,y,type="n")
+points(x[g=="Male"],y[g=="Male"],col="green")
+points(x[g=="Female"],y[g=="Female"],col="blue")
+```
+
+
+## Lattice System
+xyplot:this is the main function for creating scatterplots
+
+bwplot:box-and-whiskers plots("boxplots")
+
+histogram:histograms
+
+stripplot: like a boxplot but with actual points 
+
+dotplot:plot dots on "violin strings"
+
+splom: scatterplot matrix; like pairs in base plotting system
+
+levelplot, contourplot: for plotting "image" data
+
+
+xyplot(y ~ x | g * g,data)
+
+We use the formula notation here,hence the~.
+
+On the left of the~is the y-axis variable, on the right is the x-axis variable 
+
+levels: f and g are conditioning variables-they are optional
+
+-the*indicates an interaction between two variables
+
+The second argument is the data frame or list from which the variables in the formula should be looked up
+
+-If no data frame or list is passed, then the parent frame is used. 
+
+If no other arguments are passed,there are defaults that can be used. 
+```{r}
+library(lattice)
+library(datasets)
+state<-data.frame(state.x77,region=state.region)
+xyplot(Life.Exp~Income|region,data=state,layout=c(4,1))
+
+xyplot(Ozone ~ Wind, data=airquality)
+
+airquality<-transform(airquality,Month=factor(Month))
+xyplot(Ozone~Wind|Month,data=airquality,layout=c(5,1))
+```
+Lattice graphics functions return an object of class trellis
+
+The print methods for lattice functions actually do the work of plotting the data on the graphics device.
+
+Lattice functions return "plot objects" that can, in principle, be stored (but it's usually better to just save the code+data).
+
+On the command line,trellis objects are auto-printed so that it appears the function is plotting the data
+
+Lattice Panel Functions
+
+```{r}
+set.seed(10)
+x<-rnorm(100)
+f<-rep(0:1,each=50)
+y<-x+f -f*x +rnorm(100,sd=0.5)
+g<-factor(f,labels = c("Group 1","Group 2"))
+xyplot(y~x |g,layout=c(2,1))
+
+#custom panel function
+
+xyplot(y ~ x |f,panel = function(x,y,...){
+  panel.xyplot(x,y,...)
+  panel.abline(h=median(y),lty=2)
+  panel.lmline(x,y,col=2)
+})
+```
+The lattice system is ideal for creating conditioning plots where you examine the same kind of plot under many different conditions
+
+Panel functions can be specified/customized to modify what is plotted in each of the plot panels
+
+## ggplot2 System
+qplot
+
+factors are important for indicating subsets of data; they should be labeled
+
+```{r}
+library(ggplot2)
+data(mpg)
+qplot(displ,hwy,data=mpg,color=drv)
+qplot(displ,hwy,data=mpg,geom=c("point","smooth"))
+qplot(hwy,data=mpg,fill=drv)
+qplot(displ,hwy,data=mpg,facets=.~drv)
+
+qplot(hwy,data=mpg,facets=drv~.,binwidth=2)
+```
+
+A data frame
+
+aesthetic mappings: how data are mapped to color, size 
+
+geoms:geometric objects like points, lines, shapes. 
+
+facets: for conditional plots.
+
+stats:statistical transformations like binning, quantiles, smoothing.
+
+scales: what scale an aesthetic map uses (example: male = red, female = blue).
+
+coordinate system 
+
+```{r}
+library(ggplot2)
+g<-ggplot(mpg,aes(displ,cty))
+summary(g)
+g+geom_point()+facet_grid(.~drv)
+```
+
+Annotation
+
+Labels: xlab(), ylab(), labs(), ggtitle()
+
+Each of the “geom" functions has options to modify 
+
+For things that only make sense globally, use theme() 
+- Example: theme(legend.position = "none")
+
+Two standard appearance themes are included 
+- theme_gray(): The default theme (gray background) 
+- theme_bw(): More stark/plain
+```{r}
+g+geom_point(color="steelblue",size=4,alpha=1/2)
+
+g+geom_point(aes(color=drv),size=4,alpha=1/2)+
+  labs(title="mpg", x=expression("log "* pm[2.5]))+
+  geom_smooth(size=4,linetype=3,method="lm",se=FALSE)+
+  theme_bw(base_family = "Times")
+```
+
+Axis Limits
+
+```{r}
+testdat<-data.frame(x=1:100,y=rnorm(100))
+testdat[50,2]<-100
+plot(testdat$x,testdat$y,type="l",ylim = c(-3,3))
+
+g<-ggplot(testdat,aes(x,y))
+g+geom_line()
+g+geom_line()+ylim(-3,3) #Outlier missing
+g+geom_line()+coord_cartesian(ylim=c(-3,3)) #Outlier included
+```
+
+cut
+```{r}
+ctycutpoints<-quantile(mpg$cty,seq(0,1,length=4),na.rm=TRUE)
+mpg$ctycut<-cut(mpg$cty,ctycutpoints)
+levels(mpg$ctycut)
+
+g<-ggplot(mpg,aes(displ,drv))
+g+geom_point(alpha=1/3)+
+  geom_smooth(method="lm",se="F",color="steelblue")+
+  theme_bw(base_family = "Avenir",base_size=20)+
+  facet_wrap(drv~ctycut,ncol=4)+
+  labs(title="mpg", x=expression("log "* pm[2.5]))
+```
+
+## Plotting and Color in R
+heat.colors();topo.colors()
+
+The function colors ( ) lists the names of colors you can use in any plotting function 
+```{r}
+x<-rnorm(10)
+y<-rnorm(10)
+par(mfrow=c(1,1))
+plot(x,y,col=1)
+y<-rnorm(10)
+points(x,y,col=2)
+y<-rnorm(10)
+points(x,y,col=3)
+image(volcano, col = hcl.colors(11, "purples", rev = TRUE))
+filled.contour(volcano, nlevels = 10,
+               color.palette = function(n, ...)
+                   hcl.colors(n, "purples", rev = TRUE, ...))
+
+colors()
+
+colorRamp(c("red", "green"))( (0:4)/4 ) ## (x) , x in [0,1]
+colorRampPalette(c("blue", "red"))( 4 ) ## (n)
+## a ramp in opacity of blue values
+colorRampPalette(c(rgb(0,0,1,1), rgb(0,0,1,0)), alpha = TRUE)(8)
+
+pal<-colorRamp(c("red","blue"))
+pal(0)
+pal(1)
+pal(0.5)
+pal(seq(0,1,len=10))
+
+pal<-colorRampPalette(c("red","yellow"))
+pal(2)
+pal(10)
+
+library(RColorBrewer)
+cols<-brewer.pal(3,"BuGn")
+cols
+pal<-colorRampPalette(cols)
+par(mar=c(4,2,1,1))
+image(volcano,col=pal(20))
+
+x<-rnorm(10000)
+y<-rnorm(10000)
+smoothScatter(x,y) #2Dhistgram
+```
+There are 3 types of palettes
+
+-Sequential(YlOrRd)
+
+-Diverging (Spectral)
+
+-Qualitative (Set3)
+
+colorspace package
+
+rgb alpha
+```{r}
+plot(x,y,pch=19)
+plot(x,y,pch=19,col=rgb(0,0,0,0.02))
+```
+## Clustering
+### Hierarchical Clustering
+·An agglomerative approach
+
+-Find closest two things 
+
+-Put them together 
+
+-Find next closest 
+
+Requires
+
+-A defined distance 
+
+-A merging approach 
+
+Produces
+
+-A tree showing how close things are to each other
+
+·Most important step
+
+·Garbage in->garbage out 
+
+Distance or similarity
+
+-Continuous-euclidean distance 
+
+-Continuous-correlation similarity 
+
+-Binary-manhattan distance
+
+·Pick a distance/similarity that makes sense for your problem 
+
+```{r}
+set.seed(1234)
+par(mar=c(0,0,0,0))
+x<-rnorm(12,mean=rep(1:3,each=4),sd=0.2)
+y<-rnorm(12,mean = rep(c(1,2,1),each=4),sd=0.2)
+plot(x,y,col="blue",pch=19,cex=2)
+text(x+0.05,y+0.05,labels=as.character(1:12))
+
+dataFrame<-data.frame(x,y)
+distxy<-dist(dataFrame)
+hClustering<-hclust(distxy)
+par(mar=c(4,4,2,2))
+plot(hClustering)
+```
+
+```{r}
+myplclust <-function(hclust,lab=hclust$labels,lab.col=rep(1,length(hclust$labels)), hang=0.1, ...){
+
+## modifiction of plclust for plotting hclust objects *in colour*! Copyright 
+##Eva KF Chan 2009 Arguments:hclust:hclust object lab:a character vector 
+## of labels of the leaves of the tree lab.col: colour for the labels;
+## NA=default device foreground colour hang: as in hclust & plclust Side 
+## effect:A display of hierarchical cluster with coloured leaf labels.
+  y<-rep(hclust$height,2)
+  x<-as.numeric(hclust$merge) 
+  y <- y[which(x<0)]
+  x <- x[which(x<0)] 
+  x<-abs(x)
+  y<-y[order(x)]
+  x<-x[order(x)]
+  plot(hclust,labels=FALSE,hang=hang,...)
+  text(x=x,y= y[hclust$order] -(max(hclust$height)*hang),labels = lab[hclust$order], col=lab.col[hclust$order],srt=90,adj=c(1,0.5),xpd=NA,...) 
+}
+
+dataFrame<-data.frame(x,y)
+distxy<-dist(dataFrame)
+hClustering<-hclust(distxy)
+par(mar=c(4,4,2,2))
+myplclust(hClustering,lab=rep(1:3,each=4),lab.col=rep(1:3,each=4))
+
+set.seed(143)
+dataMarix<-as.matrix(dataFrame)[sample(1:12),]
+heatmap(dataMarix)
+```
+·Gives an idea of the relationships between variables/observations 
+
+The picture may be unstable
+
+But it is deterministic
+
+Choosing where to cut isn't always obvious 
+
+Should be primarily used for exploration
+
+### K-means Clustering
+A partioning approach
+
+-Fix a number of clusters 
+
+-Get"centroids" of each cluster 
+
+-Assign things to closest centroid
+
+-Reclaculate centroids
+
+·Requires
+
+-A defined distance metric 
+
+-A number of clusters
+
+-An initial guess as to cluster centroids
+
+·Produces
+
+-Final estimate of cluster centroids 
+
+-An assignment of each point to clusters 
+
+```{r}
+set.seed(1234)
+par(mar=c(0,0,0,0))
+x<-rnorm(12,mean=rep(1:3,each=4),sd=0.2)
+y<-rnorm(12,mean = rep(c(1,2,1),each=4),sd=0.2)
+plot(x,y,col="blue",pch=19,cex=2)
+text(x+0.05,y+0.05,labels=as.character(1:12))
+
+dataFrame<-data.frame(x,y)
+
+kmeansObj<-kmeans(dataFrame,centers=3)
+names(kmeansObj)
+kmeansObj$cluster
+
+par(mar=rep(0.2,4))
+plot(x,y,col=kmeansObj$cluster,pch=19,cex=2)
+points(kmeansObj$centers,col=1:3,pch=3,cex=3,lwd=3)
+
+
+set.seed(143)
+dataMarix<-as.matrix(dataFrame)[sample(1:12),]
+kmeansObj2<-kmeans(dataMarix,centers=3)
+par(mfrow=c(1,2),mar=c(2,4,0.1,0.1))
+image(t(dataMarix)[,nrow(dataMarix):1],yaxt="n")
+image(t(dataMarix)[,order(kmeansObj$cluster)],yaxt="n")
+
+```
+·K-means requires a number of clusters 
+
+-Pick by eye/intuition
+
+-Pick by cross validation/information theory,etc.
+
+-Determiningthe number of clusters
+
+·K-means is not deterministic 
+
+-Different#of clusters
+
+-Different number of iterations 
+
+### Dimension Reduction
+
+```{r}
+set.seed(12345)
+par(mfrow=c(1,1),mar=rep(4,4))
+dataMarix<-matrix(rnorm(400),nrow=40)
+image(1:10,1:40,t(dataMarix)[,nrow(dataMarix):1])
+heatmap(dataMarix)
+
+set.seed(678910)
+for (i in 1:40) {
+  coinFlip<-rbinom(1,size=1,prob=0.5)
+  if(coinFlip){
+    dataMarix[i,]<-dataMarix[i,]+rep(c(0,3),each=5)
+  }
+  }
+par(mar=rep(0.2,4))
+image(1:10,1:40,t(dataMarix)[,nrow(dataMarix):1])
+heatmap(dataMarix)
+
+hh<-hclust(dist(dataMarix))
+dataMatrixOrdered<-dataMarix[hh$order,]
+par(mfrow=c(1,3))
+image(t(dataMatrixOrdered)[,nrow(dataMatrixOrdered):1])
+plot(rowMeans(dataMatrixOrdered),40:1,xlab = "Row Mean",ylab = "Row",pch=19)
+plot(rowMeans(dataMatrixOrdered),xlab = "Column",ylab = "Column Mean",pch=19)
+```
+You have multivariate variables X1,Xn soX1=(X11,...,X1m)
+
+Find a new set of multivariate variables that are uncorrelated and explain as much variance as possible.
+
+If you put all the variables together in one matrix, find the best matrix created with fewer variables (lower rank)that explains the original data.
+
+The first goal is statistical and the second goal is data compression. 
+
+SVD
+
+If X is a matrix with each variable in a column and each observation in a row then the SVD is a"matrix decomposition"
+
+X=UDV^T
+
+where the columns of U are orthogonal (left singular vectors), the columns of V are orthogonal (right singular vectors) and D is a diagonal matrix (singular values).
+
+PCA
+
+The principal components are equal to the right singular values if you first scale (subtract the mean, divide by the standard deviation)the variables.
+```{r}
+svd1<-svd(scale(dataMatrixOrdered))
+par(mfrow=c(1,3))
+image(t(dataMatrixOrdered)[,nrow(dataMatrixOrdered):1])
+plot(svd1$u[,1],40:1,xlab = "Row",ylab = "First left singular vector",pch=19)
+plot(svd1$v[,1],xlab = "Column",ylab = "First right singular vector",pch=19)
+
+par(mfrow=c(1,2))
+plot(svd1$d,xlab="Column",ylab="Singular value",pch=19)
+plot(svd1$d^2/sum(svd1$d^2),xlab="Column",ylab="Prop. of variance explained",pch=19)
+
+# Relationship to principal components
+svd1<-svd(scale(dataMatrixOrdered))
+pca1<-prcomp(dataMatrixOrdered,scale=TRUE)
+plot(pca1$rotation[,1],svd1$v[,1],pch=19,xlab="Principal Component 1",ylab="Right Singular Vector 1")
+abline(c(0,1))
+
+constantMatrix<-dataMatrixOrdered*0
+for (i in 1:dim(dataMatrixOrdered)[1]) {
+  constantMatrix[i,]<-rep(c(0,1),each=5)
+}
+svd1<-svd(constantMatrix)
+par(mfrow=c(1,3))
+image(t(constantMatrix)[,nrow(constantMatrix):1])
+plot(svd1$d,xlab="Column",ylab="Singular value",pch=19)
+plot(svd1$d^2/sum(svd1$d^2),xlab="Column",ylab="Prop. of variance explained",pch=19)
+
+set.seed(678910)
+for (i in 1:40) {
+  coinFlip1<-rbinom(1,size=1,prob=0.5)
+  coinFlip2<-rbinom(1,size=1,prob=0.5)
+  if (coinFlip1){
+    dataMarix[i,]<-dataMarix[i,]+rep(c(0,5),each=5)
+  }
+  if (coinFlip2){
+    dataMarix[i,]<-dataMarix[i,]+rep(c(0,5),5)
+  }
+}
+  hh<-hclust(dist(dataMarix))
+  dataMatrixOrdered<-dataMarix[hh$order,]
+
+svd2<-svd(scale(dataMatrixOrdered))
+par(mfrow=c(1,3))
+image(t(dataMatrixOrdered))
+plot(rep(c(0,1),each=5),pch=19,xlab="Column",ylab="Pattern 1")
+plot(rep(c(0,1),5),pch=19,xlab="Column",ylab="Pattern 2")
+
+svd2<-svd(scale(dataMatrixOrdered))
+par(mfrow=c(1,3))
+image(t(dataMatrixOrdered))
+plot(svd2$v[,1],pch=19,xlab="Column",ylab="First right singular vector")
+plot(svd2$v[,2],pch=19,xlab="Column",ylab="Second right singular vector")
+
+
+svd1<-svd(scale(dataMatrixOrdered))
+par(mfrow=c(1,2))
+plot(svd1$d,xlab="Column",ylab="Singular value",pch=19)
+plot(svd1$d^2/sum(svd1$d^2),xlab="Column",ylab="Prop. of variance explained",pch=19)
+
+```
+scale函数是将一组数进行处理，默认情况下是将一组数的每个数都减去这组数的平均值后再除以这组数的均方根
+
+Missing values
+
+```{r}
+dataMarix2<-dataMatrixOrdered
+dataMarix2[sample(1:100,size=40,replace=FALSE)]<-NA
+# svd1<-svd(scale(dataMarix2))
+
+if (!require("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+BiocManager::install("impute")
+library(impute)
+dataMarix2<-dataMatrixOrdered
+dataMarix2[sample(1:100,size=40,replace=FALSE)]<-NA
+dataMarix2<-impute.knn(dataMarix2$data)
+svd1<-svd(scale(dataMatrixOrdered))
+svd2<-svd(scale(dataMarix2))
+par(mfrow=c(1,2));plot(svd1$v[,1],pch=19);plot(svd2$v,pch=19)
+# svd1<-svd(scale(dataMarix2))
+
+```
+face example
+```{R}
+load("data/face.rda")
+par(mfrow=c(1,1))
+image(t(faceData)[,nrow(faceData):1])
+svd1<-svd(scale(faceData))
+plot(svd1$d^2/sum(svd1$d^2),xlab="Column",ylab="Prop. of variance explained",pch=19)
+
+approx1<-svd1$u[,1] %*% t(svd1$v[,1]) *svd1$d[1]
+
+approx5<-svd1$u[,1:5] %*% diag(svd1$d[1:5]) %*% t(svd1$v[,1:5]) 
+approx10<-svd1$u[,1:10] %*% diag(svd1$d[1:10]) %*% t(svd1$v[,1:10]) 
+par(mfrow=c(1,4),mar=c(2,2,0,0))
+image(t(approx1)[,nrow(approx1):1],main="(a)")
+image(t(approx5)[,nrow(approx5):1],main="(b)")
+image(t(approx10)[,nrow(approx10):1],main="(c)")
+image(t(faceData)[,nrow(faceData):1],main="(d)")
+```
+### Case study
+#### Human activity with smart phones
+```{r}
+load("data/samsungData.rda")
+names(samsungData)[1:12]
+table(samsungData$activity)
+
+par(mfrow=c(1,2),mar=c(5,4,1,1))
+samsungData<-transform(samsungData,activity=factor(activity))
+sub1<-subset(samsungData, subject==1)
+plot(sub1[,1],col=sub1$activity,ylab=names(sub1)[1])
+plot(sub1[,2],col=sub1$activity,ylab=names(sub1)[2])
+legend("bottomright",legend=unique(sub1$activity),col=unique(sub1$activity),pch=1)
+
+source("data/mypclust.R")
+distanceMatrix<-dist(sub1[,1:3])
+hclustering<-hclust(distanceMatrix)
+par(mfrow=c(1,1))
+myplclust(hclustering, lab.col = unclass(sub1$activity))
+
+par(mfrow=c(1,2))
+plot(sub1[,10],pch=19,col=sub1$activity,ylab=names(sub1)[10])
+plot(sub1[,11],pch=19,col=sub1$activity,ylab=names(sub1)[11])
+
+distanceMatrix<-dist(sub1[,10:12])
+hclustering<-hclust(distanceMatrix)
+par(mfrow=c(1,1))
+myplclust(hclustering, lab.col = unclass(sub1$activity))
+
+svd1<-svd(scale(sub1[,-c(562,563)]))
+par(mfrow=c(1,2))
+plot(svd1$u[,1],col=sub1$activity,pch=19)
+plot(svd1$u[,2],col=sub1$activity,pch=19)
+
+par(mfrow=c(1,1))
+plot(svd1$u[,2],pch=19)
+
+maxContrib<-which.max(svd1$v[,2])
+distanceMatrix<-dist(sub1[,c(10:12,maxContrib)])
+hclustering<-hclust(distanceMatrix)
+myplclust(hclustering,lab.col = unclass(sub1$activity))
+
+names(samsungData)[maxContrib]
+
+kClust<-kmeans(sub1[,-c(562,563)],centers = 6)
+table(kClust$cluster,sub1$activity)
+
+kClust<-kmeans(sub1[,-c(562,563)],centers = 6,nstart = 1)
+table(kClust$cluster,sub1$activity)
+
+kClust<-kmeans(sub1[,-c(562,563)],centers = 6,nstart = 100)
+table(kClust$cluster,sub1$activity)
+
+plot(kClust$centers[1,1:10],pch=19,ylab="Cluster Center",xlab="")
+
+plot(kClust$centers[4,1:10],pch=19,ylab="Cluster Center",xlab="")
+```
+## Air Pollution Case Study
+```{r}
+pm0 <- read.table("data/RD_501_88101_1999-0.txt",comment.char = "#",header = FALSE,sep="|",na.strings = "")
+dim(pm0)
+head(pm0)
+cnames<-readLines("data/RD_501_88101_1999-0.txt",1)
+cnames
+cnames<-strsplit(cnames,"|",fixed=TRUE)
+cnames
+names(pm0)<-make.names(cnames[[1]])
+head(pm0)
+x0<-pm0$Sample.Value
+class(x0)
+str(x0)
+summary(x0)
+mean(is.na(x0))
+
+pm1 <- read.table("data/RD_501_88101_2012-0.txt",comment.char = "#",header = FALSE,sep="|",na.strings = "")
+dim(pm1)
+names(pm1)<-make.names(cnames[[1]])
+head(pm1)
+x1<-pm1$Sample.Value
+str(x1)
+summary(x1)
+summary(x0)
+mean(is.na(x1))
+
+boxplot(x0,x1)
+boxplot(log10(x0),log10(x1))
+
+negative<-x1<0
+str(negative)
+sum(negative,na.rm=TRUE)
+mean(negative,na.rm=TRUE)
+dates<-pm1$Date
+str(dates)
+dates<-as.Date(as.character(dates),"%Y%m%d")
+str(dates)
+hist(dates,"month")
+hist(dates[negative],"month")
+
+site0<- unique(subset(pm0,State.Code ==36, c(County.Code, Site.ID)))
+site1<- unique(subset(pm1,State.Code ==36, c(County.Code, Site.ID)))
+head(site0)
+site0<-paste(site0[,1],site0[,2],sep=".")
+site1<-paste(site1[,1],site1[,2],sep=".")
+
+str(site0)
+str(site1)
+both<-intersect(site0,site1)
+both
+pm0$county.site<-with(pm0,paste(County.Code,Site.ID,sep="."))
+pm1$county.site<-with(pm1,paste(County.Code,Site.ID,sep="."))
+cnt0<-subset(pm0,State.Code==36 & county.site %in% both)
+cnt1<-subset(pm1,State.Code==36 & county.site %in% both)
+head(cnt0)
+sapply(split(cnt0,cnt0$county.site), nrow)
+sapply(split(cnt1,cnt1$county.site), nrow)
+
+pm1sub<-subset(pm1,State.Code==36 & County.Code ==63 & Site.ID==2008)
+pm0sub<-subset(pm0,State.Code==36 & County.Code ==63 & Site.ID==2008)
+dim(pm1sub)
+dim(pm0sub)
+dates1 <- as.Date(as.character(pm1sub$Date),"%Y%m%d")
+x1sub<-pm1sub$Sample.Value
+plot(dates1,x1sub)
+
+dates0 <- as.Date(as.character(pm0sub$Date),"%Y%m%d")
+x0sub<-pm0sub$Sample.Value
+plot(dates0,x0sub)
+
+par(mfrow=c(1,2),mar=c(4,4,2,1))
+plot(dates0,x0sub,pch=20)
+abline(h=median(x0sub,na.rm=T))
+plot(dates1,x1sub,pch=20)
+abline(h=median(x1sub,na.rm=T))
+
+rng<-range(x0sub,x1sub,na.rm=T)
+plot(dates0,x0sub,pch=20,ylim=rng)
+abline(h=median(x0sub,na.rm=T))
+plot(dates1,x1sub,pch=20,ylim=rng)
+abline(h=median(x1sub,na.rm=T))
+
+head(pm0)
+mn0<-with(pm0,tapply(Sample.Value,State.Code,mean,na.rm=T))
+str(mn0)
+summary(mn0)
+mn1<-with(pm1,tapply(Sample.Value,State.Code,mean,na.rm=T))
+str(mn1)
+summary(mn1)
+d0<-data.frame(state=names(mn0),mean=mn0)
+d1<-data.frame(state=names(mn1),mean=mn1)
+mrg<-merge(d0,d1,by="state")
+dim(mrg)
+head(mrg)
+par(mfrow=c(1,1))
+with(mrg,plot(rep(1999,52),mrg[,2],xlim=c(1998,2013)))
+with(mrg,points(rep(2012,52),mrg[,3]))
+segments(rep(1999,52),mrg[,2],rep(2012,52),mrg[,3])
+```
